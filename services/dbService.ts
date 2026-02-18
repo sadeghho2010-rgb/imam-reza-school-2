@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { User, Resolution, Category, UserRole, UserPermissions, WorkgroupPDF } from '../types';
 import { ADMIN_USER } from '../constants';
@@ -108,7 +107,15 @@ export const dbService = {
         executionDate: r.execution_date,
         executionTerm: r.execution_term,
         isApproved: r.is_approved,
-        discussionTime: r.discussion_time
+        discussionTime: r.discussion_time,
+        reminderType: r.reminder_type,
+        reminderStartDate: r.reminder_start_date,
+        reminderEndDate: r.reminder_end_date,
+        isCompleted: r.is_completed,
+        lastCompletedAt: r.last_completed_at,
+        progress: r.progress || 0,
+        executorClaim: r.executor_claim || false,
+        executorClaimDate: r.executor_claim_date
       }));
     } catch { return []; }
   },
@@ -136,7 +143,15 @@ export const dbService = {
         executionDate: r.execution_date,
         executionTerm: r.execution_term,
         isApproved: r.is_approved,
-        discussionTime: r.discussion_time
+        discussionTime: r.discussion_time,
+        reminderType: r.reminder_type,
+        reminderStartDate: r.reminder_start_date,
+        reminderEndDate: r.reminder_end_date,
+        isCompleted: r.is_completed,
+        lastCompletedAt: r.last_completed_at,
+        progress: r.progress || 0,
+        executorClaim: r.executor_claim || false,
+        executorClaimDate: r.executor_claim_date
       }));
     } catch { return []; }
   },
@@ -157,7 +172,15 @@ export const dbService = {
       execution_term: res.execution_term || res.executionTerm,
       images: res.images || [],
       is_approved: res.is_approved ?? res.isApproved,
-      discussion_time: res.discussion_time || res.discussionTime
+      discussion_time: res.discussion_time || res.discussionTime,
+      reminder_type: res.reminderType,
+      reminder_start_date: res.reminderStartDate,
+      reminder_end_date: res.reminderEndDate,
+      is_completed: res.isCompleted ?? res.is_completed,
+      last_completed_at: res.lastCompletedAt || res.last_completed_at,
+      progress: res.progress || 0,
+      executor_claim: res.executorClaim ?? res.executor_claim,
+      executor_claim_date: res.executorClaimDate || res.executor_claim_date
     }]);
     if (error) throw error;
   },
@@ -167,7 +190,6 @@ export const dbService = {
     if (error) throw error;
   },
 
-  // Fixed Workgroup PDF Methods
   getWorkgroupPDFs: async (workgroupId: string): Promise<WorkgroupPDF[]> => {
     try {
       const { data, error } = await supabase
@@ -190,14 +212,13 @@ export const dbService = {
   },
 
   saveWorkgroupPDF: async (pdf: WorkgroupPDF) => {
-    // We use the ACTUAL workgroupId as parent_id to satisfy FK constraints
     const { error } = await supabase.from('resolutions').upsert([{
       id: pdf.id,
       parent_id: pdf.workgroupId, 
       title: pdf.title,
       description: pdf.description,
       images: [pdf.fileUrl],
-      lesson: PDF_MARKER, // This marker hides it from normal resolution lists
+      lesson: PDF_MARKER,
       workgroup: 'بایگانی اسناد',
       executor: 'سیستم',
       created_at: pdf.createdAt || new Date().toISOString(),

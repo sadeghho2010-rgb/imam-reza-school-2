@@ -32,7 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ user, onLogout, children, activeTab, se
     { id: 'programs', label: 'برنامه‌های مدرسه', icon: FileText, perm: 'programs' },
     { id: 'council', label: 'مصوبات شورا', icon: FileText, perm: 'council' },
     { id: 'workgroups', label: 'مصوبات کارگروه‌ها', icon: Users, perm: 'workgroups', hasSubmenu: true },
-    { id: 'by-grade', label: 'مصوبات بر اساس پایه', icon: Layers, perm: 'byGrade' },
+    { id: 'by-grade', label: 'مشاهده و پیگیری مصوبات', icon: Layers, perm: 'byGrade' },
     { id: 'admin', label: 'مدیریت کاربران', icon: Settings, adminOnly: true },
   ];
 

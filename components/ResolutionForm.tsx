@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Save, Calendar, Book, Layers, Users, Image as ImageIcon, Loader2, Clock, FileText, Upload } from 'lucide-react';
+import { X, Save, Calendar, Book, Layers, Users, Image as ImageIcon, Loader2, Clock, FileText, Upload, Bell } from 'lucide-react';
 import { dbService } from '../services/dbService';
 import { GRADES, DEFAULT_TITLES } from '../constants';
 import { Resolution } from '../types';
@@ -18,6 +18,7 @@ interface ResolutionFormProps {
 const ResolutionForm: React.FC<ResolutionFormProps> = ({ parentId, onClose, onSave, isNote = false, initialData, sectionType, parentName }) => {
   const [needsDate, setNeedsDate] = useState(initialData?.needsDate || initialData?.needs_date || false);
   const [dateType, setDateType] = useState<'calendar' | 'term'>(initialData?.executionTerm || initialData?.execution_term ? 'term' : 'calendar');
+  const [reminderType, setReminderType] = useState<'none' | 'once' | 'monthly' | 'quarterly' | 'yearly'>(initialData?.reminderType as any || 'none');
   const [images, setImages] = useState<string[]>(initialData?.images || []);
   const [isUploading, setIsUploading] = useState(false);
   const [titles, setTitles] = useState<string[]>([]);
@@ -57,7 +58,6 @@ const ResolutionForm: React.FC<ResolutionFormProps> = ({ parentId, onClose, onSa
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
-    // Improved labeling logic - No more "General" or "Macro"
     let contextLabel = parentName;
     if (sectionType === 'council' && !parentName) contextLabel = "شورای مدرسه";
     if (sectionType === 'programs' && !parentName) contextLabel = "برنامه‌های مدرسه";
@@ -79,7 +79,10 @@ const ResolutionForm: React.FC<ResolutionFormProps> = ({ parentId, onClose, onSa
       executionTerm: needsDate && dateType === 'term' ? (formData.get('executionTerm') as string) : undefined,
       images,
       isApproved: initialData ? (initialData.is_approved ?? initialData.isApproved) : !isNote,
-      discussionTime: isNote ? (formData.get('discussionTime') as string) : undefined
+      discussionTime: isNote ? (formData.get('discussionTime') as string) : undefined,
+      reminderType,
+      reminderStartDate: reminderType === 'yearly' ? (formData.get('reminderStartDate') as string) : undefined,
+      reminderEndDate: reminderType === 'yearly' ? (formData.get('reminderEndDate') as string) : undefined
     };
     try {
       await dbService.saveResolution(res);
@@ -97,7 +100,7 @@ const ResolutionForm: React.FC<ResolutionFormProps> = ({ parentId, onClose, onSa
           </h3>
           <button onClick={onClose} className="p-3 hover:bg-gray-100 rounded-full text-gray-400"><X size={28} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-10 space-y-6 text-right">
+        <form onSubmit={handleSubmit} className="p-10 space-y-8 text-right">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-gray-400 pr-2">عنوان</label>
@@ -138,6 +141,7 @@ const ResolutionForm: React.FC<ResolutionFormProps> = ({ parentId, onClose, onSa
             <textarea name="description" defaultValue={initialData?.description} rows={4} required className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl font-black text-black outline-none focus:ring-2 focus:ring-emerald-500/20"></textarea>
           </div>
 
+          {/* Execution Date Settings */}
           <div className="bg-gray-50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
              <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={needsDate} onChange={(e) => setNeedsDate(e.target.checked)} className="w-5 h-5 accent-emerald-600" />
@@ -154,6 +158,64 @@ const ResolutionForm: React.FC<ResolutionFormProps> = ({ parentId, onClose, onSa
                    ) : (
                       <input type="text" name="executionTerm" defaultValue={initialData?.executionTerm} placeholder="مثلاً: ترم دوم پایه ۴" className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl font-black text-black outline-none" />
                    )}
+                </div>
+             )}
+          </div>
+
+          {/* Reminder Settings Section */}
+          <div className="bg-amber-50 p-6 rounded-[2rem] border border-amber-100 space-y-6">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-amber-200"><Bell size={20} /></div>
+                <h4 className="font-black text-black text-lg">تنظیمات یادآور سامانه</h4>
+             </div>
+             
+             <div className="space-y-4">
+                <label className="text-[11px] font-black text-amber-800 pr-1">این مصوبه چگونه یادآوری شود؟</label>
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                   {[
+                     {id: 'none', label: 'غیرفعال'},
+                     {id: 'once', label: 'یک‌بار'},
+                     {id: 'monthly', label: 'ماهانه'},
+                     {id: 'quarterly', label: 'سه ماه'},
+                     {id: 'yearly', label: 'سالانه'}
+                   ].map(opt => (
+                     <button 
+                        key={opt.id}
+                        type="button" 
+                        onClick={() => setReminderType(opt.id as any)}
+                        className={`py-3 rounded-xl font-black text-[10px] transition-all border ${reminderType === opt.id ? 'bg-amber-600 text-white border-amber-600 shadow-lg' : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-100/50'}`}
+                     >
+                        {opt.label}
+                     </button>
+                   ))}
+                </div>
+             </div>
+
+             {reminderType === 'yearly' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in zoom-in-95 duration-300">
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-amber-700 pr-2">هر سال از تاریخ (شروع بازه)</label>
+                      <input 
+                        name="reminderStartDate" 
+                        defaultValue={initialData?.reminderStartDate} 
+                        placeholder="مثلاً: ۰۱/۱۵" 
+                        required 
+                        className="w-full px-4 py-4 bg-white border border-amber-200 rounded-2xl font-black text-black outline-none focus:ring-2 focus:ring-amber-500/20" 
+                      />
+                   </div>
+                   <div className="space-y-2">
+                      <label className="text-[10px] font-black text-amber-700 pr-2">الی تاریخ (پایان بازه)</label>
+                      <input 
+                        name="reminderEndDate" 
+                        defaultValue={initialData?.reminderEndDate} 
+                        placeholder="مثلاً: ۰۲/۳۰" 
+                        required 
+                        className="w-full px-4 py-4 bg-white border border-amber-200 rounded-2xl font-black text-black outline-none focus:ring-2 focus:ring-amber-500/20" 
+                      />
+                   </div>
+                   <p className="col-span-full text-[9px] font-bold text-amber-600 pr-2 leading-relaxed opacity-80">
+                      * در یادآوری سالانه، فقط ماه و روز (مثل ۰۵/۲۸) را وارد کنید. سیستم هر سال در این بازه، مصوبه را در ویترین شما نمایش می‌دهد.
+                   </p>
                 </div>
              )}
           </div>

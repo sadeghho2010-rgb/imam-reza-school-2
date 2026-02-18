@@ -1,4 +1,3 @@
-
 export enum UserRole {
   ADMIN = 1, // Full Access
   CUSTOM = 2 // Custom Access controlled by Admin
@@ -40,15 +39,15 @@ export interface WorkgroupPDF {
 
 export interface Resolution {
   id: string;
-  parentId?: string; // TS side
-  parent_id?: string; // DB side
+  parentId?: string;
+  parent_id?: string;
   title: string;
   workgroup: string;
   lesson?: string;
   grade?: string;
   description: string;
-  createdAt?: string; // TS side
-  created_at?: string; // DB side
+  createdAt?: string;
+  created_at?: string;
   executor: string;
   needsDate: boolean;
   needs_date?: boolean;
@@ -57,10 +56,27 @@ export interface Resolution {
   executionTerm?: string;
   execution_term?: string;
   images: string[];
-  isApproved?: boolean; // TS side
-  is_approved?: boolean; // DB side
+  isApproved?: boolean;
+  is_approved?: boolean;
   discussionTime?: string;
   discussion_time?: string;
+  // Reminder Fields
+  reminderType?: 'none' | 'once' | 'monthly' | 'quarterly' | 'yearly';
+  reminder_type?: string;
+  reminderStartDate?: string;
+  reminder_start_date?: string;
+  reminderEndDate?: string;
+  reminder_end_date?: string;
+  // Completion Fields
+  isCompleted?: boolean;
+  is_completed?: boolean;
+  lastCompletedAt?: string;
+  last_completed_at?: string;
+  progress?: number;
+  executorClaim?: boolean;
+  executor_claim?: boolean;
+  executorClaimDate?: string;
+  executor_claim_date?: string;
 }
 
 export interface Category {
